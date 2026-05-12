@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "isOnline": { "type": "boolean" },
+        "lastSeen": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName"]
+    },
+    "Game": {
+      "title": "Game",
+      "description": "A 2R2F (Bulls and Cows) game instance",
+      "type": "object",
+      "properties": {
+        "playerX": { "type": "string" },
+        "playerO": { "type": "string" },
+        "guessesX": { "type": "array", "description": "History of guesses by player X" },
+        "guessesO": { "type": "array", "description": "History of guesses by player O" },
+        "turn": { "type": "string" },
+        "status": { "type": "string", "enum": ["waiting", "setting_secrets", "playing", "X_won", "O_won", "draw"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["status", "createdAt", "updatedAt"]
+    },
+    "Secret": {
+      "title": "Secret",
+      "description": "Private 4-digit number",
+      "type": "object",
+      "properties": {
+        "value": { "type": "string" }
+      },
+      "required": ["value"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/games/{gameId}": {
+      "schema": "Game",
+      "description": "Active and finished games"
+    },
+    "/games/{gameId}/secrets/{playerId}": {
+      "schema": "Secret",
+      "description": "Private secrets for each player"
+    }
+  }
+}

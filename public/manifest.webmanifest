@@ -1,0 +1,24 @@
+{
+  "name": "شاکار ٢ڕ٢ف ئۆنلاین",
+  "short_name": "٢ڕ٢ف",
+  "description": "یارییەکی زیرەکی دۆزینەوەی ژمارەکان بە شێوەی ئۆنلاین",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050505",
+  "theme_color": "#F27D26",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/806/806131.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/806/806131.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

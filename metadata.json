@@ -1,0 +1,8 @@
+{
+  "name": "shakar 2R2F",
+  "description": "شاکار ٢ڕ٢ف: یارییەکی ئۆنلاینی زیرەکانە و مۆدێرنی کوردی بۆ دۆزینەوەی ژمارە نێهێنییەکان بە کێبڕکێ لەگەڵ هاوڕێکانت.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}

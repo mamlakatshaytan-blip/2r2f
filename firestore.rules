@@ -1,0 +1,122 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Phase 3: Primitive Definition Helpers ---
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isEmailVerified() {
+      // Allow guest users (anonymous) or verified email users
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'anonymous');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Health Check Collection
+    match /health/{docId} {
+      allow read, write: if true;
+    }
+
+    // --- Phase 4: Validation Blueprints ---
+
+    function isValidUser(data) {
+      let fields = data.keys();
+      return fields.hasAll(['displayName', 'isOnline', 'lastSeen']) && 
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.isOnline is bool &&
+             data.lastSeen == request.time;
+    }
+
+    function isValidGame(data) {
+      let fields = data.keys();
+      return fields.hasAll(['playerX', 'status', 'createdAt', 'updatedAt']) &&
+             data.playerX is string && data.playerX.size() > 0 &&
+             data.status in ['waiting', 'setting_secrets', 'playing', 'X_won', 'O_won', 'draw'] &&
+             data.createdAt is timestamp &&
+             (data.updatedAt == request.time || data.updatedAt == data.createdAt);
+    }
+
+    function isValidSecret(data) {
+      let fields = data.keys();
+      return fields.hasAll(['value']) && fields.size() == 1 &&
+             data.value is string && data.value.size() == 4 && data.value.matches('^[0-9]+$');
+    }
+
+    // --- Phase 4.1: Resource Match Blocks ---
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming());
+      allow update: if isSignedIn() && request.auth.uid == userId &&
+                      incoming().diff(existing()).affectedKeys().hasAny(['isOnline', 'lastSeen', 'displayName', 'photoURL']) &&
+                      isValidUser(incoming());
+    }
+
+    // Game Rules
+    match /games/{gameId} {
+      allow read: if isSignedIn();
+      
+      allow create: if isSignedIn() && 
+                      isValidId(gameId) &&
+                      incoming().playerX == request.auth.uid &&
+                      (incoming().status == 'waiting' || (incoming().status == 'setting_secrets' && incoming().playerO == 'BOT')) &&
+                      incoming().createdAt == request.time &&
+                      isValidGame(incoming());
+
+      allow update: if isSignedIn() && isValidGame(incoming()) && (
+        // Action: Join
+        (existing().status == 'waiting' && incoming().status == 'setting_secrets' && 
+         incoming().playerO == request.auth.uid && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['playerO', 'status', 'updatedAt'])) ||
+        
+        // Action: Set Status to Playing (handled by Player X)
+        (existing().status == 'setting_secrets' && incoming().status == 'playing' && 
+         existing().playerX == request.auth.uid &&
+         incoming().diff(existing()).affectedKeys().hasAny(['status', 'turn', 'updatedAt'])) ||
+
+        // Action: Submit Guess
+        (existing().status == 'playing' && existing().turn == request.auth.uid &&
+         (incoming().status in ['playing', 'X_won', 'O_won']) &&
+         incoming().diff(existing()).affectedKeys().hasAny(['guessesX', 'guessesO', 'turn', 'status', 'updatedAt']))
+      );
+
+      // Secrets Subcollection - Only owner can read/write their own secret
+      // EXCEPT for BOT games where Player X can write the BOT secret
+      match /secrets/{playerId} {
+        allow read: if isSignedIn() && (
+          request.auth.uid == playerId || 
+          (playerId == 'BOT' && (
+            (get(/databases/$(database)/documents/games/$(gameId)).data.playerX == request.auth.uid) ||
+            (getAfter(/databases/$(database)/documents/games/$(gameId)).data.playerX == request.auth.uid)
+          ))
+        );
+        allow write: if isSignedIn() && (
+          (request.auth.uid == playerId && isValidSecret(incoming())) ||
+          (playerId == 'BOT' && isValidSecret(incoming()) && (
+            (get(/databases/$(database)/documents/games/$(gameId)).data.playerX == request.auth.uid) ||
+            (getAfter(/databases/$(database)/documents/games/$(gameId)).data.playerX == request.auth.uid)
+          ))
+        );
+      }
+    }
+  }
+}

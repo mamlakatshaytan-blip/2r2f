@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@100..700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-kurdish: "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-elegant-bg: #050505;
+  --color-elegant-sidebar: #0A0B0D;
+  --color-elegant-text: #F5F5F5;
+  --color-elegant-accent: #F27D26;
+  --color-elegant-border: rgba(255, 255, 255, 0.1);
+}
+
+:root {
+  --font-sans: var(--font-kurdish);
+  --background: #050505;
+  --foreground: #F5F5F5;
+  --primary: #F27D26;
+}
+
+body {
+  font-family: var(--font-kurdish);
+  background-color: var(--background);
+  color: var(--foreground);
+  direction: rtl;
+  margin: 0;
+}
+
+@layer base {
+  * {
+    @apply border-white/10;
+  }
+}
+
+@layer utilities {
+  .glow-golden {
+    text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 30px #B8860B;
+    animation: golden-pulse 3s infinite ease-in-out;
+  }
+  .glow-electric {
+    text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff, 0 0 40px #0066ff;
+    animation: electric-pulse 2s infinite ease-in-out;
+  }
+  .glow-neon {
+    animation: neon-pulse 4s infinite linear;
+  }
+}
+
+@keyframes golden-pulse {
+  0%, 100% { text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700; opacity: 1; }
+  50% { text-shadow: 0 0 20px #FFD700, 0 0 40px #B8860B; opacity: 0.9; }
+}
+
+@keyframes electric-pulse {
+  0%, 100% { text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff; filter: hue-rotate(0deg); }
+  50% { text-shadow: 0 0 15px #00f2ff, 0 0 30px #0066ff; filter: hue-rotate(20deg); }
+}
+
+@keyframes neon-pulse {
+  0% { text-shadow: 0 0 10px #ff0080; filter: hue-rotate(0deg); }
+  33% { text-shadow: 0 0 10px #00ff00; filter: hue-rotate(120deg); }
+  66% { text-shadow: 0 0 10px #00ffff; filter: hue-rotate(240deg); }
+  100% { text-shadow: 0 0 10px #ff0080; filter: hue-rotate(360deg); }
+}
